@@ -1,8 +1,8 @@
 <?php
 $serverinimi="localhost"; // d70420.mysql.zonevs.eu
-$kasutaja="merkulova21"; // d70420_merk21
+$kasutaja="imerkulova21"; // d70420_merk21
 $parool="123456"; // ''
-$andmebaas="merkulova21"; //d70420_merk21
+$andmebaas="imerkulova21"; //d70420_merk21
 
 $yhendus=new mysqli($serverinimi, $kasutaja, $parool, $andmebaas);
 
