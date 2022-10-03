@@ -1,6 +1,12 @@
 <?php
-require_once ('conf.php');
+require_once('conf.php');
 global $yhendus;
+// eemalda urlist muutujad
+function clearVarsExcept($url, $varname) {
+var_dump($_SERVER['REQUEST_URI']);
+
+    return strtok(basename($_SERVER['REQUEST_URI']),"?")."?$varname=".$_REQUEST[$varname];
+}
 //lisamine tabelisse
 if(isSet($_REQUEST["lisamisvorm"])) {
     $kask = $yhendus->prepare("
@@ -10,6 +16,13 @@ INSERT INTO oppeained(aineNimetus, kirjeldus, loomisePaev) VALUES (?, ?, NOW())"
     ///sdi, s-string, d-double, i -integer
     $kask->execute();
     header("Location: $_SERVER[PHP_SELF]");
+}
+// kustutamine tabelist
+
+if(isset($_REQUEST["kustuta"])){
+    $kask=$yhendus->prepare("DELETE FROM oppeained WHERE id=?");
+    $kask->bind_param("i", $_REQUEST["kustuta"]);
+    $kask->execute();
 }
 
 
@@ -37,37 +50,40 @@ INSERT INTO oppeained(aineNimetus, kirjeldus, loomisePaev) VALUES (?, ?, NOW())"
 <div id="meny">
 <ul>
     <?php
+
     $kask=$yhendus->prepare("SELECT id, aineNimetus FROM oppeained");
     $kask->bind_result($id, $nimetus);
     $kask->execute();
 
     while($kask->fetch()){
     echo "<li>";
-    echo "<a href='?id=$id'>".$nimetus."</a>";
+    //echo "<a href='?id=$id'>".$nimetus."</a>";
+    echo "<a href='".clearVarsExcept(basename($_SERVER['REQUEST_URI']),"leht")."&id=$id'>$nimetus</a>";
     //echo ", ".$kirjeldus.", ".$paev;
     echo "</li>";
     }
 
  ?>
 </ul>
-    <a href="?lisamine=jah">Lisas uus õppeaine</a>
+    <a href="?lisamine=jah">Lisa uus õppeaine</a>
 
 
 </div>
 <div id="sisu">
     <?php
     // andmebaasi tabeli sisu
-
-    $kask=$yhendus->prepare("SELECT id, aineNimetus, kirjeldus, loomisePaev FROM oppeained WHERE id=?");
+if(isset($_REQUEST["id"])) {
+    $kask = $yhendus->prepare("SELECT id, aineNimetus, kirjeldus, loomisePaev FROM oppeained WHERE id=?");
     $kask->bind_param("i", $_REQUEST["id"]);
     //?- küsimärgi asemel aadressiribalt tuleb id
     $kask->bind_result($id, $nimetus, $kirjeldus, $paev);
     $kask->execute();
-    if($kask->fetch()){
-        echo "<div>".htmlspecialchars($kirjeldus);
-        echo "<br><strong>".htmlspecialchars($paev)."</strong></div>";
+    if ($kask->fetch()) {
+        echo "<div>" . htmlspecialchars($kirjeldus);
+        echo "<br><strong>" . htmlspecialchars($paev) . "</strong></div>";
+        echo "<a href='?kustuta=$id'>Kustuta</a>";
     }
-
+}
 if(isset($_REQUEST["lisamine"])){
     ?>
     <form action="?">
@@ -84,5 +100,8 @@ if(isset($_REQUEST["lisamine"])){
     ?>
 
 </div>
+<pre>
+    <?php var_dump($_SERVER['REQUEST_URI']); ?>
+</pre>
 </body>
 </html>
